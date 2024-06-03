@@ -1,0 +1,111 @@
+<html>
+<head>
+    <title>视频上传和处理</title>
+    <style>
+        /* 添加一些样式，让网页更美观 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: blue;
+        }
+        p {
+            color: gray;
+        }
+        form {
+            margin: 10px 0;
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+        }
+        input[type="file"] {
+            width: 300px;
+        }
+        input[type="submit"] {
+            margin-left: 150px;
+            background-color: blue;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        #result {
+            margin-top: 20px;
+            border: 1px solid gray;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>视频上传和处理</h1>
+    <p>这是一个简单的网页，用于上传一个视频文件，然后调用flask后端服务，对视频进行处理，并显示处理后的视频。</p>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <label for="video">选择一个视频文件：</label>
+        <input type="file" id="video" name="video" accept="video/*">
+        <input type="submit" value="上传并处理">
+    </form>
+    <div id="result">
+        <!-- 这里将显示处理后的视频 -->
+    </div>
+    <script>
+        // 获取表单元素
+        var form = document.querySelector('form');
+        // 获取结果元素
+        var result = document.getElementById('result');
+        // 监听表单提交事件
+        form.addEventListener('submit', function(event) {
+            // 阻止默认行为
+            event.preventDefault();
+            // 创建一个表单数据对象
+            var formData = new FormData(form);
+            // 创建一个XMLHttpRequest对象
+            var xhr = new XMLHttpRequest();
+            // 设置请求方法和地址
+            xhr.open('POST', '/upload');
+            // 设置响应类型为blob
+            xhr.responseType = 'blob';
+            // 设置请求完成的回调函数
+            xhr.onload = function() {
+                // 如果响应状态码为200，表示成功
+                if (xhr.status === 200) {
+                    // 创建一个URL对象，用于表示响应的blob数据
+                    var url = URL.createFor(xhr.response);
+                    // 创建一个video元素，用于播放视频
+                    var video = document.createElement('video');
+                    // 设置视频的属性
+                    video.src = url; // 注意：这里要赋值为url对象，而不是blob对象
+                    video.controls = true;
+                    video.autoplay = true;
+                    video.loop = true;
+                    video.width = 400;
+                    video.height = 300;
+                    // 设置视频加载完成的回调函数
+                    video.onload = function() {
+                        // 释放URL对象
+                        URL.revokeObjectURL(url);
+                    };
+                    // 设置视频加载失败的回调函数
+                    video.onerror = function() {
+                        // 显示错误信息
+                        result.innerHTML = '播放失败：' + video.error.message;
+                        // 释放URL对象
+                        URL.revokeObjectURL(url);
+                    };
+                    // 清空结果元素的内容
+                    result.innerHTML = '';
+                    // 把视频元素添加到结果元素中
+                    result.appendChild(video);
+                } else {
+                    // 如果响应状态码不是200，表示失败，显示错误信息
+                    result.innerHTML = '处理失败：' + xhr.statusText;
+                }
+            };
+            // 发送请求
+            xhr.send(formData);
+        });
+    </script>
+</body>
+
+</html>
